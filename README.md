@@ -27,6 +27,16 @@
 来源版本：`obra/superpowers@5bf4e78`（MIT 许可证，见 `licenses/superpowers-LICENSE`）。
 复制时把技能之间的引用从 `superpowers:技能名` 改成了 `技能名`，因为作为项目技能加载时没有插件前缀。
 
+### 账号技能（自动同步，不在这个仓库里）
+
+你在 claude.ai 设置里启用的技能（例如 `holiday-activity-book`、`question-reveal`、`y1-answer-check`、`youyouspellingbeehomework`、`docx`、`pptx`）会自动出现在每个云端 session，不需要复制到这里。
+
+## 其他设定
+
+- `CLAUDE.md`：给 Claude 的项目说明（用简体中文、文件放哪里等），每次开 session 自动读取。
+- `.claude/hooks/session-start.sh`：云端 session 开场时自动安装做 Word / PPT / PDF / Excel 要用的套件。
+- 还能怎么设定、在哪里改：见 [`docs/云端设定指南.md`](docs/云端设定指南.md)。
+
 ## 新增技能
 
 每个技能放一个文件夹：`.claude/skills/<技能名>/SKILL.md`。
