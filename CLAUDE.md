@@ -10,7 +10,7 @@
 
 Jack 的 Claude 技能库兼云端工作区。用这个仓库开的 Claude Code 云端 session 会自动带上：
 
-1. **项目技能**：`.claude/skills/` 里的 15 个 superpowers 技能（brainstorming、writing-plans、systematic-debugging 等），清单见 `README.md`。
+1. **项目技能**：`.claude/skills/` 里的 15 个 superpowers 技能（brainstorming、writing-plans、systematic-debugging 等），加上设计/动画技能 `motion-graphic-video`、`frontend-design`，清单见 `README.md`。
 2. **账号技能**：用户在 claude.ai 设置里启用的技能（例如 holiday-activity-book、question-reveal、y1-answer-check、youyouspellingbeehomework、docx、pptx、pdf、xlsx、learn）。这些由账号自动同步，**不要**复制进这个仓库。
 3. **内置技能**：Claude Code 自带的（code-review、dataviz 等）。
 
@@ -35,6 +35,8 @@ Jack 的 Claude 技能库兼云端工作区。用这个仓库开的 Claude Code 
 - https://prompt-motion.com （用户指定的动效参考）
 
 动效基本要求：**非常流畅**——影片用 60fps 输出；动作用缓出曲线（ease-out，例如 expo/quart），不要直线匀速；元素依次错开出场；转场要连贯，不要硬切。
+
+**不要有 AI 的味道，要像真人做的。** 做影片/动画一律照项目技能 `motion-graphic-video`（里面有「AI 味清单」和逐帧录制工具），做任何视觉设计先读 `frontend-design`。
 
 注意：云端环境的网络预设会挡住这些网站。打不开时要跟用户说是哪个网站被挡，并照 `docs/云端设定指南.md` 的说明请用户在环境设定里放行，不要假装看过。
 

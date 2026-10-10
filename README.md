@@ -27,6 +27,15 @@
 来源版本：`obra/superpowers@5bf4e78`（MIT 许可证，见 `licenses/superpowers-LICENSE`）。
 复制时把技能之间的引用从 `superpowers:技能名` 改成了 `技能名`，因为作为项目技能加载时没有插件前缀。
 
+### 设计与动画
+
+| 技能 | 用途 |
+|---|---|
+| `motion-graphic-video` | 自己做 Motion Graphic 影片：网页动画逐帧录成 60fps MP4，要求流畅、不要 AI 味（本仓库自写，含 `tools/` 录制工具） |
+| `frontend-design` | 做设计时避开「AI 模板感」，先定配色、字体、版面再动手（来自 [anthropics/skills](https://github.com/anthropics/skills)，Apache-2.0，见 `licenses/anthropics-skills-frontend-design-LICENSE.txt`） |
+
+`motion-graphic-video/references/motion-principles.md` 来自 [heygen-com/hyperframes](https://github.com/heygen-com/hyperframes)（Apache-2.0，见 `licenses/hyperframes-LICENSE`）。
+
 ### 账号技能（自动同步，不在这个仓库里）
 
 你在 claude.ai 设置里启用的技能（例如 `holiday-activity-book`、`question-reveal`、`y1-answer-check`、`youyouspellingbeehomework`、`docx`、`pptx`）会自动出现在每个云端 session，不需要复制到这里。
