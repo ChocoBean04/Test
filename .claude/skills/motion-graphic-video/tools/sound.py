@@ -385,8 +385,8 @@ def music_notebook(dur):
             break
         bs, rh = prog[b % 4]
         sparse = b < 2 or t0 > end_sparse
-        add(buf, bass(bs + 12, bar * 0.95, 0.32) * 0.6 + 0, t0, -0.1)
-        add(buf, piano(bs, bar * 0.9, 0.42), human(t0), -0.25)
+        add(buf, bass(bs + 12, bar * 0.95, 0.12), t0, -0.1)
+        add(buf, piano(bs + 12, bar * 0.9, 0.34), human(t0), -0.25)
         if sparse:
             for j, m in enumerate(rh):
                 add(buf, piano(m, bar * 0.9, 0.2), human(t0 + j * 0.06), 0.2 - 0.1 * j)
@@ -398,7 +398,7 @@ def music_notebook(dur):
             for p, m in melody.get(b % 8, []):
                 add(buf, piano(m, beat * 1.6, 0.17), human(t0 + p * beat), 0.15)
     # final chord rings out under the pull-back
-    add(buf, piano(38, 6, 0.4), dur - 6.5, -0.2)
+    add(buf, piano(50, 6, 0.32), dur - 6.5, -0.2)
     for j, m in enumerate([57, 61, 64, 66, 69]):
         add(buf, piano(m, 6, 0.2), dur - 6.5 + j * 0.09, 0.25 - 0.1 * j)
     return buf
@@ -429,10 +429,10 @@ def music_paper(dur):
         root, tri = ch
         cut = {'A': 1300, 'B': 700, 'C': 650, 'D': 1500, 'E': 1700}[sec]
         add(buf, pad([m + 12 for m in tri], bar, 0.028 if sec != 'B' else 0.024, cut), t0, 0)
-        add(buf, bass(root, bar * 0.9, 0.34), t0, -0.05)
+        add(buf, bass(root + 12, bar * 0.9, 0.16), t0, -0.05)
         if sec == 'C':
             for k in range(1, 8):
-                add(buf, bass(root, beat * 0.4, 0.14), t0 + k * beat / 2, 0)
+                add(buf, bass(root + 12, beat * 0.4, 0.08), t0 + k * beat / 2, 0)
         notes = tri + [tri[0] + 12, tri[1] + 12]
         if sec in ('A', 'E') or (sec == 'D' and b >= 42):
             steps = [(i * 0.5, notes[[0, 2, 1, 3, 2, 4, 3, 1][i]]) for i in range(8)]
@@ -481,9 +481,21 @@ def main():
         y = fn(**kw)
         add(fx, y, e['t'], rng.uniform(-0.35, 0.35), GAIN.get(e['kind'], 1.0))
     fx = reverb(fx, 0.5, 0.16, 6000)
+    fx = np.stack([hp(c, 45, 4) for c in fx])
     mus = music_notebook(dur) if style == 'notebook' else music_paper(dur)
     mus = reverb(mus, 2.4, 0.32, 4200)
-    mix = fx * 1.0 + mus * (0.55 if style == 'notebook' else 0.6)
+    mus = np.stack([hp(c, 75, 4) for c in mus])
+    def active_rms(x):
+        m = x.mean(0)
+        w = SR // 4
+        k = len(m) // w
+        r = np.sqrt((m[:k * w] ** 2).reshape(k, w).mean(1))
+        r = r[r > np.percentile(r, 40)]
+        return float(np.sqrt(np.mean(r ** 2))) + 1e-9
+    under_db = 8.0 if style == 'notebook' else 6.0
+    g = active_rms(fx) / active_rms(mus) * 10 ** (-under_db / 20)
+    print(f'fx {20*np.log10(active_rms(fx)):.1f} dB, music {20*np.log10(active_rms(mus)):.1f} dB -> music gain {g:.2f}')
+    mix = fx + mus * g
     mix = mix[:, :n_of(dur + 0.5)]
     # gentle fade in/out and soft clip
     nf = n_of(0.6)
