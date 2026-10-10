@@ -35,7 +35,8 @@ PAPER = {
     'pit':   [('2299', 0.32, 0.06)],
     'flick': [('175', 0.22, 0.19)],
 }
-# 'slime' = the jelly mascot: soft wet landings, bubbly hops, real-voice babble (tools/babble.py) and giggles.
+# 'slime' = the jelly mascot: soft wet landings, bubbly hops, sparkles. The user decided NO character voice
+# (no babble, giggles, hiccups or kisses), so those cue kinds map to non-voice sounds and 'talk*' cues stay silent.
 SLIME = {
     'fall':    [('168', 0.22, 0.10)],
     'whoosh':  [('166', 0.28, 0.12)],
@@ -44,13 +45,11 @@ SLIME = {
     'hop':     [('3000', 0.26, 0.06), ('1317', 0.40, 0.12)],
     'pop':     [('2357', 0.30, 0.01)],
     'pop2':    [('2356', 0.24, 0.02)],
-    'giggle':  [('419', 0.55, 0.13)],
-    'eep':     [('2208', 0.38, 0.48)],
     'sparkle': [('2985', 0.22, 0.05)],
-    'kiss':    [('2192', 0.28, 0.02)],
     'squish':  [('1884', 0.85, 0.15)],
-    'talk1':   [('talk1', 0.62, 0.0)],
-    'talk2':   [('talk2', 0.68, 0.0)],
+    'giggle':  [('2356', 0.24, 0.02)],
+    'eep':     [('2895', 0.32, 0.03)],
+    'kiss':    [('2985', 0.22, 0.05)],
 }
 SAMPLES = {
     'whoosh': [('168', 0.50, 0.10), ('166', 0.42, 0.12)],

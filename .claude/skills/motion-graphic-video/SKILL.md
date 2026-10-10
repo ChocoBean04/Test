@@ -139,22 +139,17 @@ MG.onFrame(t => Jelly.apply(r, S, t)); // 每帧：S = {hop, amt, sx, sy, lift, 
 - 表情：neutral、happy、excited、wink、content（ω）、playful、curious、shy、nervous、scared、surprised、sad、lazy、strain（> <）、determined、proud、love（爱心眼）、dizzy、lookL、lookR、talk。
 - 一蹦一跳：`S.hop` 从 0 补间到 N（N 跳），`S.amt` 0→1 开启；每跳自带「蹲→拉长起跳→空中→落地压扁→果冻抖」。落地在每跳的 0.78 处，要对拍点就从 `拍点 - 0.78×拍长` 开始。
 - 大动作（掉下来、大跳、吓一跳、融化）：直接补间 `S.lift / sx / sy / rot`，落地一定要「压扁 → elastic 弹回」。
-- 讲话：`r.fs.talk.on`（0→1 补间）＋每帧把 `r.fs.talk.v` 设成声音的音量包络，嘴巴就跟着声音开合。
+- 讲话：`r.fs.talk.on`（0→1 补间）＋每帧把 `r.fs.talk.v`（0..1 嘴巴张开量）设成一条「音节包络」，嘴巴就一张一合；对话框的字在每个音节时间点一个个弹出。
 
-### 讲话的声音（用户选 B：可爱的叽里咕噜声）
-```bash
-python3 -I tools/babble.py sfx/2260.mp3 voice/talk1.wav voice/talk1.json --speed 1.28   # Mixkit 2260「Little boy gibberish talk」
-python3 -I tools/voicecheck.py voice/talk1.wav    # 看音高、音节数
-```
-- 原理：真人乱讲话的录音像录音带一样加速（音高跟着变高，不会有机器人味），再算出每帧的嘴巴张开量＋音节时间点。
-- 把 json 包成 `window.TALK = {talk1: …}` 给页面用；对话框的字在音节时间点一个个弹出。
-- 2259 也是乱讲话（短，适合「拜拜～」）。
+### 讲话：**不要配音**（2026-10 用户听过后决定）
+- 试过 B「可爱的叽里咕噜声」（真人乱讲话录音加速），用户听完说**不要配音**。笑声、叫声、亲亲声这类角色人声也一律不放。
+- 嘴巴开合的节奏还是需要一条包络：`tools/babble.py` 可以从一段乱讲话录音（Mixkit 2260／2259）算出很自然的音节包络＋时间点（只拿来驱动嘴巴，**声音不混进去**）。也可以照每个字的出现时间自己做一开一合。
 
-### 史莱姆用的真实音效（Mixkit，`mix_real.py --preset slime`）
-掉落 168、大跳 166、落地 3056「Cartoon quick splat」、弹起 2895「Boing hit sound」、小跳 3000／1317（水泡声）、对话框 2357、好奇 2356、害羞笑 419「Cartoon giggle」、吓一跳 2208「Little cartoon creature hiccup」、得意 2985、爱心 2192「Little cute kiss」、融化 1884「Soap dispenser press squish」。讲话时配乐自动降 6dB。
+### 史莱姆用的真实音效（Mixkit，`mix_real.py --preset slime`，全部非人声）
+掉落 168、大跳 166、落地 3056「Cartoon quick splat」、弹起／吓一跳 2895「Boing hit sound」、小跳 3000／1317（水泡声）、对话框 2357、好奇／害羞 2356、得意／爱心 2985、融化 1884「Soap dispenser press squish」。页面发出的 `talk*` 音效点在这个预设里是静音的。
 
 ### 范例：`examples/mascot-showcase.html`（30 秒角色展示）
-掉下来弹两下 → 左看右看、好奇 → 一蹦一跳到中间 → 讲话「嗨！你好呀～」 → 害羞 → 吓一跳 → 得意 → 好喜欢 → 转圈大跳 → 融化又弹回 → 「拜拜～」。背景是「果冻天空」（亮蓝天、旋转光芒、飘的云和泡泡、绿色果冻山丘）。
+掉下来弹两下 → 左看右看、好奇 → 一蹦一跳到中间 → 讲话「嗨！你好呀～」（只有嘴巴和对话框，没有声音） → 害羞 → 吓一跳 → 得意 → 好喜欢 → 转圈大跳 → 融化又弹回 → 「拜拜～」。背景是「果冻天空」（亮蓝天、旋转光芒、飘的云和泡泡、绿色果冻山丘）。
 它期待的目录：`$W/<页面目录>/{mascot-showcase.html, jelly.js, grid.js, talk.js}`，`$W/tools/lib.js`，`$W/node_modules/gsap`，`$W/fonts/fonts.css`（Huninn 粉圆字体：`python3 -I tools/fetch_fonts.py fonts "Huninn"`）。配乐用 Mixkit 8「Jumping Around」（112 BPM），拍点用 `tools/beatgrid.py` 算。
 
 ## 其他参考
