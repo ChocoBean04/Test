@@ -130,7 +130,7 @@ def sfx_whoosh(dur, dist=1920, **_):
     y = sweep_lp(x, 180, 2600, shape)
     y = hp(y, 90)
     g = min(1.0, dist / 1920) ** 0.7
-    return y * shape * 0.55 * g
+    return y * shape * 0.2 * g
 
 
 def sfx_swish(dur=0.5, **_):
@@ -150,7 +150,7 @@ def sfx_paper(**_):
         out[st:st + len(c)] += c[:n - st]
     th = np.sin(2 * np.pi * 78 * tt(n)) * np.exp(-tt(n) / 0.045) * 0.3
     body = lp(noise(n), 380) * np.exp(-tt(n) / 0.03) * 0.25
-    return (out + th + body) * 0.8
+    return (out + th + body) * 0.6
 
 
 def sfx_drop(dur=0.42, **_):
@@ -163,7 +163,7 @@ def sfx_drop(dur=0.42, **_):
 def sfx_thud(**_):
     n = n_of(0.28)
     t = tt(n)
-    body = glide(150, 62, n, 3.0) * np.exp(-t / 0.07) * 0.55
+    body = glide(170, 80, n, 3.0) * np.exp(-t / 0.06) * 0.22
     knock = lp(noise(n), 1800) * np.exp(-t / 0.012) * 0.25
     return (body + knock) * fade(n, 0.002, 0.04)
 
@@ -175,7 +175,7 @@ def sfx_pop(soft=0, big=0, gain=1.0, **_):
     t = tt(n)
     y = glide(f0, f0 * 0.72, n, 1.5) * np.exp(-t / (0.03 if not big else 0.05))
     y[:len(click(2))] += click(2) * 0.4
-    return y * (0.16 if soft else 0.28) * (1.6 if big else 1.0) * gain
+    return y * (0.13 if soft else 0.2) * (1.5 if big else 1.0) * gain
 
 
 def sfx_lift(dur=0.6, **_):
@@ -226,7 +226,7 @@ def sfx_grow(step=0, **_):
     out = np.zeros(len(y) + n_of(0.11))
     out[:len(y)] += y
     out[n_of(0.11):n_of(0.11) + len(z)] += z
-    return out * 0.7
+    return out * 0.45
 
 
 def sfx_shrink(dur=3.6, **_):
@@ -238,8 +238,8 @@ def sfx_shrink(dur=3.6, **_):
 def sfx_pit(dur=1.4, **_):
     n = n_of(dur + 1.2)
     t = tt(n)
-    y = (np.sin(2 * np.pi * 55 * t) + 0.6 * np.sin(2 * np.pi * 82.4 * t)) * bell(n, 0.35)
-    return lp(y, 300) * 0.12
+    y = (np.sin(2 * np.pi * 98 * t) + 0.6 * np.sin(2 * np.pi * 146.8 * t) + 0.25 * np.sin(2 * np.pi * 196 * t)) * bell(n, 0.35)
+    return lp(y, 500) * 0.045
 
 
 def sfx_flip(**_):
@@ -255,15 +255,15 @@ def sfx_flip(**_):
 def sfx_clack(**_):
     n = n_of(0.12)
     t = tt(n)
-    y = bp(noise(n), 700, 3200) * np.exp(-t / 0.018) * 0.5 + np.sin(2 * np.pi * 210 * t) * np.exp(-t / 0.035) * 0.4
+    y = bp(noise(n), 700, 3200) * np.exp(-t / 0.018) * 0.3 + np.sin(2 * np.pi * 210 * t) * np.exp(-t / 0.035) * 0.22
     return y
 
 
 def sfx_tick(**_):
     n = n_of(0.15)
     t = tt(n)
-    y = (np.sin(2 * np.pi * 1150 * t) + 0.6 * np.sin(2 * np.pi * 1730 * t)) * np.exp(-t / 0.03) * 0.3
-    y += np.sin(2 * np.pi * 130 * t) * np.exp(-t / 0.04) * 0.3
+    y = (np.sin(2 * np.pi * 1150 * t) + 0.6 * np.sin(2 * np.pi * 1730 * t)) * np.exp(-t / 0.03) * 0.16
+    y += np.sin(2 * np.pi * 130 * t) * np.exp(-t / 0.04) * 0.18
     return y
 
 
