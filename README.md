@@ -36,6 +36,18 @@
 
 `motion-graphic-video/references/motion-principles.md` 来自 [heygen-com/hyperframes](https://github.com/heygen-com/hyperframes)（Apache-2.0，见 `licenses/hyperframes-LICENSE`）。
 
+### 角色动画原理（做吉祥物、角色动画时用）
+
+| 技能 | 用途 |
+|---|---|
+| `squash-stretch-mastery` | 挤压与拉伸：落地会压扁、跳起会拉长，角色才有弹性和重量感 |
+| `anticipation-mastery` | 预备动作：跳之前先蹲一下，动作才不会突然冒出来 |
+| `follow-through-overlapping` | 跟随与重叠动作：身体停了，脸和高光慢半拍、晃一下再停 |
+| `character-appeal` | 角色魅力：剪影清楚、表情好读、有自己的小习惯，让人喜欢 |
+| `playfulness-fun` | 俏皮感：卡通式的夸张弹跳和搞笑节奏 |
+
+这 5 个技能来自 [dylantarre/animation-principles](https://github.com/dylantarre/animation-principles)（MIT 许可证，见 `licenses/animation-principles-LICENSE`）。
+
 ### 账号技能（自动同步，不在这个仓库里）
 
 你在 claude.ai 设置里启用的技能（例如 `holiday-activity-book`、`question-reveal`、`y1-answer-check`、`youyouspellingbeehomework`、`docx`、`pptx`）会自动出现在每个云端 session，不需要复制到这里。
