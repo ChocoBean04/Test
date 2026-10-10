@@ -10,6 +10,10 @@ description: Use when the user asks for any animation, motion graphic, explainer
 1. **非常流畅**：60fps、缓动曲线、转场连贯。
 2. **不要有 AI 味，要像真人设计师做的。**
 3. **一定要参考**这些网站的风格：21st.dev、motion.so、dribbble.com、awwwards.com、pinterest.com、prompt-motion.com。云端网络打不开时，直接告诉用户是哪个网站被挡，请他照 `docs/云端设定指南.md` 放行，**不要假装看过**。
+   - 用浏览器截图来看（多数网站要跑 JS 才有内容）：`node tools/snap.mjs refs <网址...>`，会存 3 张往下卷的截图和页面文字。awwwards.com 目前会回「upstream request failed」。
+   - **prompt-motion.com 最有用**：它收集用 Claude 做的动态影片，每支都有提示词（首页 HTML 里的 `self.__next_f` 资料可以解析出全部作品的 slug、标题、分类；作品页有完整提示词；影片在 `media.prompt-motion.com/.../video.*.mp4`，可下载后抽帧比较）。
+   - 从这些作品学到的重点：**每个动作都配音效**、有轻配乐；每 1.5–2 秒一个新点子；明暗突然切换制造节奏；真实物理（挤压回弹、跟随、残影）；不要出现时间码/进度条之类的界面装饰。
+   - Pinterest/Dribbble 的剪纸作品：层次多、每层纸看得出厚度和阴影。
 4. 回复一律简体中文、白话。
 
 motion.so（Motion MCP）要付费点数，账号原本是 0 点；要用之前先问用户。默认用本技能免费自己做。
@@ -73,6 +77,17 @@ node tools/render.mjs v1/index.html out/v1.mp4 --workers 3     # 背景执行
 - 录完用 ffprobe 确认 1920×1080、60fps、长度对；再抽几帧拼图检查。
 - **不要用 `pkill -f "<含路径的字串>"`**：会把自己正在跑的 shell 一起杀掉。
 
-### 6. 交付
+### 6. 声音（不要省略）
+- 页面里的 `Pen.draw`、`MG.write`、`MG.rise`、镜头移动会**自动**记录音效事件；其他动作（贴纸、落地、翻牌、打勾…）在 build 里手动加 `MG.sfx('paper', 时间)`。可用种类见 `tools/sound.py` 里的 `sfx_*`：pen、marker、write、whoosh、swish、paper、drop、thud、pop、lift、jump、buzz、slide、grow、shrink、pit、flip、clack、tick、flick、ring、lamp、tape、ghost。
+- 导出事件 → 合成（全部用代码生成，没有版权问题）→ 合并：
+```bash
+node tools/events.mjs v1/index.html audio/v1-events.json
+python3 -I tools/sound.py audio/v1-events.json notebook audio/v1.wav   # notebook = 钢琴 lo-fi；paper = 拇指琴，中段转小调
+ffmpeg -i out/v1.mp4 -i audio/v1.wav -c:v copy -c:a aac -b:a 192k -af loudnorm=I=-16:TP=-1.5 -shortest out/v1-final.mp4
+```
+- 听不到声音时，用 `showspectrumpic` 画频谱图、算响度来检查：音效要清楚、配乐压在下面、没有爆音。需要 `pip install scipy`。
+
+### 7. 交付
 - 用 SendUserFile 把 MP4 给用户（放 scratchpad，**不要提交进仓库**：影片很大，内容也可能含个人资料）。
-- 告诉用户：没有配乐/配音（需要的话可以在剪映、CapCut 加）、哪些地方可以再调。
+- 原始渲染档很大（2.5 分钟约 100MB），交付前用 `-crf 20` 再压一份方便传送。
+- 告诉用户：音效和配乐是代码生成的、没有旁白；哪些地方可以再调。

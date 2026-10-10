@@ -143,6 +143,7 @@
     // hidden before its start (avoids round-cap dots), snaps visible as the pen lands
     MG.tl.fromTo(p, { opacity: 0 }, { opacity: 1, duration: 0.001, immediateRender: true }, at);
     p.__end = at + dur;
+    if (!o.silent) MG.sfx(layer === '#hl' ? 'marker' : 'pen', at, { dur: Math.round(dur * 1000) / 1000, len: Math.round(len) });
     return p;
   };
   window.Pen = Pen;

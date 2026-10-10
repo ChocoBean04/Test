@@ -4,6 +4,10 @@
   gsap.ticker.lagSmoothing(0);
   const tl = gsap.timeline({ paused: true });
   const frameHooks = [];
+  // sound events, exported for tools/sound.py (window.__sfx)
+  const sfx = [];
+  const addSfx = (kind, t, o = {}) => { sfx.push({ kind, t: Math.round(t * 1000) / 1000, ...o }); };
+  window.__sfx = sfx;
   const FPS = 60;
 
   function split(el) {
@@ -41,6 +45,11 @@
       const from = {};
       for (const k in st) from[k] = this.state[k];
       this.segs.push({ t0: at, t1: at + dur, from, to: st, ease: gsap.parseEase(ease) });
+      if ('x' in st || 'y' in st) {
+        const dx = 'x' in st ? st.x - from.x : 0, dy = 'y' in st ? st.y - from.y : 0;
+        const dist = Math.hypot(dx * (this.state.s || 1), dy * (this.state.s || 1));
+        addSfx('whoosh', at, { dur, dist: Math.round(dist) });
+      }
       Object.assign(this.state, st);
       tl.set({}, {}, at + dur); // extend timeline duration
     },
@@ -68,6 +77,7 @@
   const MG = {
     tl, split, $, one, cam, look, FPS,
     onFrame: fn => frameHooks.push(fn),
+    sfx: addSfx,
     rect(el, root) { // element box in root's coordinate space (root must be untransformed while measuring)
       const a = one(el).getBoundingClientRect(), b = one(root).getBoundingClientRect();
       return { x: a.left - b.left, y: a.top - b.top, w: a.width, h: a.height };
@@ -80,6 +90,7 @@
     // masked line rise — targets are .ln wrappers
     rise(targets, at, o = {}) {
       const inner = $(targets).map(l => l.firstElementChild);
+      addSfx('swish', at, { dur: o.dur ?? 1.1 });
       tl.fromTo(inner, { yPercent: 115, rotate: o.rotate ?? 0 }, { yPercent: 0, rotate: 0, duration: o.dur ?? 1.1,
         ease: o.ease ?? 'expo.out', stagger: o.stagger ?? 0.12, immediateRender: true }, at);
     },
@@ -99,6 +110,7 @@
       $(targets).forEach(el => {
         const n = [...el.textContent.replace(/\s/g, '')].length;
         const dur = o.dur ?? Math.max(0.35, n / (o.cps ?? 11));
+        addSfx('write', t, { dur, n });
         tl.fromTo(el, { clipPath: 'inset(-30% 101% -30% -4%)' }, { clipPath: 'inset(-30% -4% -30% -4%)', duration: dur,
           ease: o.ease ?? 'power1.inOut', immediateRender: true }, t);
         t += dur + (o.gap ?? 0.15);

@@ -38,7 +38,7 @@ Jack 的 Claude 技能库兼云端工作区。用这个仓库开的 Claude Code 
 
 **不要有 AI 的味道，要像真人做的。** 做影片/动画一律照项目技能 `motion-graphic-video`（里面有「AI 味清单」和逐帧录制工具），做任何视觉设计先读 `frontend-design`。
 
-注意：云端环境的网络预设会挡住这些网站。打不开时要跟用户说是哪个网站被挡，并照 `docs/云端设定指南.md` 的说明请用户在环境设定里放行，不要假装看过。
+注意：用户已在云端环境设定里放行这些网站（awwwards.com 目前仍回「upstream request failed」）。换了新环境若又打不开，要跟用户说是哪个网站被挡，并照 `docs/云端设定指南.md` 请用户放行，不要假装看过。看网站的方法见技能 `motion-graphic-video`。
 
 ## 规则
 
