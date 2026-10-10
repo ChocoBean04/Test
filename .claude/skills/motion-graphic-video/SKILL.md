@@ -12,7 +12,12 @@ description: Use when the user asks for any animation, motion graphic, explainer
 3. **一定要先看参考网站**：21st.dev、motion.so、dribbble.com、awwwards.com、pinterest.com、prompt-motion.com。打不开时要告诉用户是哪个网站被挡，请他照 `docs/云端设定指南.md` 放行，**不要假装看过**。
 4. 回复一律简体中文、白话。
 
-## 已知偏好（2026-10 用户亲自选过）
+## 已知偏好（2026-10 用户亲自选过，越下面越新）
+
+- **最新：要有吉祥物演示内容**：天蓝色果冻史莱姆（Slime Rancher 风格），做法见下面「吉祥物」一节。用户也说过**喜欢剪纸版《舒適圈》的风格和动画**（`tools/pen.js` 那套手绘方格笔记本被退回）。
+- 回复一律简体华文；用户希望先问清楚再做（一次一个问题、给选项）。
+
+以下是更早选过的瑞士色块风格，仍可当作「没有吉祥物」时的备选：
 
 - **风格：A「瑞士色块」**。
   - 整面饱和色块随小节切换：橘红 `#FF4A1C`、电光蓝 `#2E3BEA`、黄 `#FFC83A`、黑 `#111111`、米白 `#F1EEE6`。
@@ -113,6 +118,44 @@ bash tools/finalize.sh out/v1.mp4 audio/v1.wav deliver/影片名.mp4   # 合并�
 - **上限 30MB**：超过就用两遍编码压到约 1.2Mbps，保持 60fps，画质仍清楚：
   `ffmpeg -i in.mp4 -c:v libx264 -preset slow -tune animation -b:v 1220k -pass 1 -an -f null /dev/null && ffmpeg -i in.mp4 -c:v libx264 -preset slow -tune animation -b:v 1220k -maxrate 3000k -bufsize 4000k -pass 2 -c:a aac -b:a 128k -movflags +faststart out.mp4`
 - 告诉用户用了哪首音乐（Mixkit 曲名／作者）、可以再调哪里。
+
+## 吉祥物：果冻史莱姆（2026-10 定案）
+
+用户要一个「会动、会讲话、会跳」的吉祥物来演示内容。定案是**天蓝色果冻史莱姆，Slime Rancher 风格**：
+
+- 身体：软糖形（上圆下宽），一圈浅色描边（贴纸感），果冻渐层，左上大高光，身体里几颗小泡泡。**没有耳朵、没有手脚**。
+- 眼睛：小小的深色椭圆点，带一颗小白点反光。
+- 表情要可爱：^ ^ 笑眼、ω 猫嘴、眨眼时嘴巴歪一边、脸颊红晕。**开心的嘴巴＝一个大圆被另一个圆从上面咬掉一小口**，底部有粉红舌头（`bite()` 函数算出来的）。
+- 动画原理照项目技能 `squash-stretch-mastery`（落地压扁、起跳拉长、体积不变）、`anticipation-mastery`（跳前先蹲）、`follow-through-overlapping`（脸比身体慢半拍）、`character-appeal`、`playfulness-fun`。
+
+### 角色程序 `characters/jelly.js`
+```js
+const r = Jelly.make(svgGroup);        // 页面要有 <filter id="jshadow">
+Jelly.pose(r, 'neutral');              // 直接设定表情
+Jelly.face(tl, r, 'neutral', 'happy', t);   // 在时间轴上换表情（旧的缩掉、新的弹出）
+Jelly.blink(tl, r, t);
+MG.onFrame(t => Jelly.apply(r, S, t)); // 每帧：S = {hop, amt, sx, sy, lift, rot, look, dir}
+```
+- 表情：neutral、happy、excited、wink、content（ω）、playful、curious、shy、nervous、scared、surprised、sad、lazy、strain（> <）、determined、proud、love（爱心眼）、dizzy、lookL、lookR、talk。
+- 一蹦一跳：`S.hop` 从 0 补间到 N（N 跳），`S.amt` 0→1 开启；每跳自带「蹲→拉长起跳→空中→落地压扁→果冻抖」。落地在每跳的 0.78 处，要对拍点就从 `拍点 - 0.78×拍长` 开始。
+- 大动作（掉下来、大跳、吓一跳、融化）：直接补间 `S.lift / sx / sy / rot`，落地一定要「压扁 → elastic 弹回」。
+- 讲话：`r.fs.talk.on`（0→1 补间）＋每帧把 `r.fs.talk.v` 设成声音的音量包络，嘴巴就跟着声音开合。
+
+### 讲话的声音（用户选 B：可爱的叽里咕噜声）
+```bash
+python3 -I tools/babble.py sfx/2260.mp3 voice/talk1.wav voice/talk1.json --speed 1.28   # Mixkit 2260「Little boy gibberish talk」
+python3 -I tools/voicecheck.py voice/talk1.wav    # 看音高、音节数
+```
+- 原理：真人乱讲话的录音像录音带一样加速（音高跟着变高，不会有机器人味），再算出每帧的嘴巴张开量＋音节时间点。
+- 把 json 包成 `window.TALK = {talk1: …}` 给页面用；对话框的字在音节时间点一个个弹出。
+- 2259 也是乱讲话（短，适合「拜拜～」）。
+
+### 史莱姆用的真实音效（Mixkit，`mix_real.py --preset slime`）
+掉落 168、大跳 166、落地 3056「Cartoon quick splat」、弹起 2895「Boing hit sound」、小跳 3000／1317（水泡声）、对话框 2357、好奇 2356、害羞笑 419「Cartoon giggle」、吓一跳 2208「Little cartoon creature hiccup」、得意 2985、爱心 2192「Little cute kiss」、融化 1884「Soap dispenser press squish」。讲话时配乐自动降 6dB。
+
+### 范例：`examples/mascot-showcase.html`（30 秒角色展示）
+掉下来弹两下 → 左看右看、好奇 → 一蹦一跳到中间 → 讲话「嗨！你好呀～」 → 害羞 → 吓一跳 → 得意 → 好喜欢 → 转圈大跳 → 融化又弹回 → 「拜拜～」。背景是「果冻天空」（亮蓝天、旋转光芒、飘的云和泡泡、绿色果冻山丘）。
+它期待的目录：`$W/<页面目录>/{mascot-showcase.html, jelly.js, grid.js, talk.js}`，`$W/tools/lib.js`，`$W/node_modules/gsap`，`$W/fonts/fonts.css`（Huninn 粉圆字体：`python3 -I tools/fetch_fonts.py fonts "Huninn"`）。配乐用 Mixkit 8「Jumping Around」（112 BPM），拍点用 `tools/beatgrid.py` 算。
 
 ## 其他参考
 - `references/motion-principles.md`（HeyGen hyperframes，Apache-2.0）：缓动、节奏、构图规则。

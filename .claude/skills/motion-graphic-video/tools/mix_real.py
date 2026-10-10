@@ -1,11 +1,12 @@
 """Mix a music track with real (sampled) sound effects placed at the page's sound cues.
 
-usage: python3 mix_real.py events.json music.mp3 sfx_dir out.wav [--fade 3.5]
+usage: python3 mix_real.py events.json music.mp3 sfx_dir[,dir2,...] out.wav [--fade 3.5] [--preset swiss|paper|slime]
 
 events.json: {"duration": s, "sfx": [{"kind", "t", ...}]} from tools/events.mjs.
 Samples are chosen per kind from SAMPLES (Mixkit free license; no attribution required).
 """
 import json
+import os
 import sys
 
 import librosa
@@ -16,6 +17,41 @@ SR = 48000
 rng = np.random.default_rng(117)
 
 # kind -> [(mixkit sfx id, gain, lead seconds to subtract so the hit lands on the cue)]
+# 'swiss' = bold colour-field reels; 'paper' = the cut-paper look (soft paper/wood/page sounds).
+# Kinds missing from a preset are left silent on purpose (too frequent or no good real sample).
+PAPER = {
+    'paper': [('2380', 0.55, 0.11), ('1530', 0.26, 0.03)],
+    'drop':  [('175', 0.30, 0.19)],
+    'thud':  [('2151', 0.42, 0.10)],
+    'pop':   [('2356', 0.26, 0.02), ('2357', 0.22, 0.01)],
+    'swish': [('3115', 0.36, 0.07), ('175', 0.30, 0.19)],
+    'slide': [('1530', 0.24, 0.03)],
+    'flip':  [('1104', 0.50, 0.02)],
+    'clack': [('2182', 0.28, 0.03)],
+    'tick':  [('1120', 0.55, 0.10)],
+    'jump':  [('166', 0.34, 0.12)],
+    'buzz':  [('2876', 0.30, 0.02)],
+    'grow':  [('1107', 0.32, 0.07)],
+    'pit':   [('2299', 0.32, 0.06)],
+    'flick': [('175', 0.22, 0.19)],
+}
+# 'slime' = the jelly mascot: soft wet landings, bubbly hops, real-voice babble (tools/babble.py) and giggles.
+SLIME = {
+    'fall':    [('168', 0.22, 0.10)],
+    'whoosh':  [('166', 0.28, 0.12)],
+    'land':    [('3056', 0.55, 0.40)],
+    'boing':   [('2895', 0.32, 0.03)],
+    'hop':     [('3000', 0.26, 0.06), ('1317', 0.40, 0.12)],
+    'pop':     [('2357', 0.30, 0.01)],
+    'pop2':    [('2356', 0.24, 0.02)],
+    'giggle':  [('419', 0.55, 0.13)],
+    'eep':     [('2208', 0.38, 0.48)],
+    'sparkle': [('2985', 0.22, 0.05)],
+    'kiss':    [('2192', 0.28, 0.02)],
+    'squish':  [('1884', 0.85, 0.15)],
+    'talk1':   [('talk1', 0.62, 0.0)],
+    'talk2':   [('talk2', 0.68, 0.0)],
+}
 SAMPLES = {
     'whoosh': [('168', 0.50, 0.10), ('166', 0.42, 0.12)],
     'swish':  [('3115', 0.42, 0.07), ('175', 0.38, 0.19)],
@@ -36,6 +72,9 @@ def load(path, mono=True):
 def main():
     args = sys.argv[1:]
     fade = 3.5
+    preset = SAMPLES
+    if '--preset' in args:
+        i = args.index('--preset'); preset = {'paper': PAPER, 'slime': SLIME}.get(args[i + 1], SAMPLES); args = args[:i] + args[i + 2:]
     if '--fade' in args:
         i = args.index('--fade'); fade = float(args[i + 1]); args = args[:i] + args[i + 2:]
     ev_path, music_path, sfx_dir, out = args
@@ -59,13 +98,14 @@ def main():
     fx = np.zeros((2, n))
     counts = {}
     for e in data['sfx']:
-        opts = SAMPLES.get(e['kind'])
-        if not opts:
+        opts = preset.get(e['kind'])
+        if not opts or e.get('soft'):
             continue
         k = counts.get(e['kind'], 0); counts[e['kind']] = k + 1
         sid, gain, lead = opts[k % len(opts)]
         if sid not in cache:
-            cache[sid] = load(f'{sfx_dir}/{sid}.mp3')
+            cands = [f'{d}/{sid}.{ext}' for d in sfx_dir.split(',') for ext in ('mp3', 'wav')]
+            cache[sid] = load(next(c for c in cands if os.path.exists(c)))
         s = cache[sid] * gain * 10 ** (rng.uniform(-1.5, 1.0) / 20)
         st = int(max(0.0, e['t'] - lead) * SR)
         if st >= n:
@@ -82,6 +122,9 @@ def main():
         if e['kind'] == 'whoosh':
             a, b = int(max(0, e['t'] - 0.15) * SR), int(min(dur, e['t'] + 0.55) * SR)
             env[a:b] = np.minimum(env[a:b], 10 ** (-3 / 20))
+        if e['kind'].startswith('talk'):      # let the voice through: music dips 6 dB while the mascot talks
+            a, b = int(max(0, e['t'] - 0.1) * SR), int(min(dur, e['t'] + e.get('dur', 1) + 0.15) * SR)
+            env[a:b] = np.minimum(env[a:b], 10 ** (-6 / 20))
     k = int(0.08 * SR)
     env = np.convolve(env, np.ones(k) / k, mode='same')
     mix = music * env + fx
