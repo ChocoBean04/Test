@@ -31,7 +31,7 @@
 
 | 技能 | 用途 |
 |---|---|
-| `motion-graphic-video` | 自己做 Motion Graphic 影片：网页动画逐帧录成 60fps MP4，要求流畅、不要 AI 味（本仓库自写，含 `tools/` 录制工具） |
+| `motion-graphic-video` | 自己做 Motion Graphic 影片：照参考网站做瑞士色块风格、对齐音乐拍点、配真实音效，逐帧录成 60fps MP4（本仓库自写，含 `tools/` 和 `styles/swiss.js`） |
 | `frontend-design` | 做设计时避开「AI 模板感」，先定配色、字体、版面再动手（来自 [anthropics/skills](https://github.com/anthropics/skills)，Apache-2.0，见 `licenses/anthropics-skills-frontend-design-LICENSE.txt`） |
 
 `motion-graphic-video/references/motion-principles.md` 来自 [heygen-com/hyperframes](https://github.com/heygen-com/hyperframes)（Apache-2.0，见 `licenses/hyperframes-LICENSE`）。
