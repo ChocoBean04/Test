@@ -83,11 +83,12 @@ node tools/render.mjs v1/index.html out/v1.mp4 --workers 3     # 背景执行
 ```bash
 node tools/events.mjs v1/index.html audio/v1-events.json
 python3 -I tools/sound.py audio/v1-events.json notebook audio/v1.wav   # notebook = 钢琴 lo-fi；paper = 拇指琴，中段转小调
-ffmpeg -i out/v1.mp4 -i audio/v1.wav -c:v copy -c:a aac -b:a 192k -af loudnorm=I=-16:TP=-1.5 -shortest out/v1-final.mp4
+bash tools/finalize.sh out/v1.mp4 audio/v1.wav deliver/影片名.mp4   # 合并声音 + 压缩 + 响度 -16 LUFS
 ```
 - 听不到声音时，用 `showspectrumpic` 画频谱图、算响度来检查：音效要清楚、配乐压在下面、没有爆音。需要 `pip install scipy`。
 
 ### 7. 交付
 - 用 SendUserFile 把 MP4 给用户（放 scratchpad，**不要提交进仓库**：影片很大，内容也可能含个人资料）。
-- 原始渲染档很大（2.5 分钟约 100MB），交付前用 `-crf 20` 再压一份方便传送。
+- 原始渲染档很大（2.5 分钟约 100MB）；`finalize.sh` 出来的档约 20–60MB。**SendUserFile 上限 30MB**，超过就用两遍编码压到约 1.2Mbps（保持 60fps，画质仍清楚）：
+  `ffmpeg -i in.mp4 -c:v libx264 -preset slow -tune animation -b:v 1220k -pass 1 -an -f null /dev/null && ffmpeg -i in.mp4 -c:v libx264 -preset slow -tune animation -b:v 1220k -maxrate 3000k -bufsize 4000k -pass 2 -c:a aac -b:a 128k -movflags +faststart out.mp4`
 - 告诉用户：音效和配乐是代码生成的、没有旁白；哪些地方可以再调。
