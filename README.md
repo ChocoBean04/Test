@@ -27,6 +27,27 @@
 来源版本：`obra/superpowers@5bf4e78`（MIT 许可证，见 `licenses/superpowers-LICENSE`）。
 复制时把技能之间的引用从 `superpowers:技能名` 改成了 `技能名`，因为作为项目技能加载时没有插件前缀。
 
+### 设计与动画
+
+| 技能 | 用途 |
+|---|---|
+| `motion-graphic-video` | 自己做 Motion Graphic 影片：照参考网站做瑞士色块风格、对齐音乐拍点、配真实音效，逐帧录成 60fps MP4（本仓库自写，含 `tools/` 和 `styles/swiss.js`） |
+| `frontend-design` | 做设计时避开「AI 模板感」，先定配色、字体、版面再动手（来自 [anthropics/skills](https://github.com/anthropics/skills)，Apache-2.0，见 `licenses/anthropics-skills-frontend-design-LICENSE.txt`） |
+
+`motion-graphic-video/references/motion-principles.md` 来自 [heygen-com/hyperframes](https://github.com/heygen-com/hyperframes)（Apache-2.0，见 `licenses/hyperframes-LICENSE`）。
+
+### 角色动画原理（做吉祥物、角色动画时用）
+
+| 技能 | 用途 |
+|---|---|
+| `squash-stretch-mastery` | 挤压与拉伸：落地会压扁、跳起会拉长，角色才有弹性和重量感 |
+| `anticipation-mastery` | 预备动作：跳之前先蹲一下，动作才不会突然冒出来 |
+| `follow-through-overlapping` | 跟随与重叠动作：身体停了，脸和高光慢半拍、晃一下再停 |
+| `character-appeal` | 角色魅力：剪影清楚、表情好读、有自己的小习惯，让人喜欢 |
+| `playfulness-fun` | 俏皮感：卡通式的夸张弹跳和搞笑节奏 |
+
+这 5 个技能来自 [dylantarre/animation-principles](https://github.com/dylantarre/animation-principles)（MIT 许可证，见 `licenses/animation-principles-LICENSE`）。
+
 ### 账号技能（自动同步，不在这个仓库里）
 
 你在 claude.ai 设置里启用的技能（例如 `holiday-activity-book`、`question-reveal`、`y1-answer-check`、`youyouspellingbeehomework`、`docx`、`pptx`）会自动出现在每个云端 session，不需要复制到这里。

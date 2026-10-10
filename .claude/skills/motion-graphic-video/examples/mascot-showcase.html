@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="zh-Hans" data-fonts='40px "Huninn"'>
+<head>
+<meta charset="utf-8">
+<title>史莱姆动画</title>
+<link rel="stylesheet" href="../fonts/fonts.css">
+<script src="../node_modules/gsap/dist/gsap.min.js"></script>
+<script src="../tools/lib.js"></script>
+<script src="grid.js"></script>
+<script src="talk.js"></script>
+<script src="jelly.js"></script>
+<style>
+  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #7CC6F4; }
+  #sky { position: absolute; inset: 0; background:
+      radial-gradient(ellipse 60% 50% at 50% 30%, rgba(255,255,255,.62), rgba(255,255,255,0) 70%),
+      linear-gradient(#58B2EF 0%, #8FCFF8 46%, #CBEDFF 100%); }
+  #rays { position: absolute; left: 50%; top: 30%; width: 3400px; height: 3400px; margin: -1700px 0 0 -1700px; opacity: .2;
+    background: repeating-conic-gradient(from 0deg, rgba(255,255,255,.95) 0deg 6deg, rgba(255,255,255,0) 6deg 20deg);
+    -webkit-mask: radial-gradient(circle, #000 0, #000 15%, transparent 46%); mask: radial-gradient(circle, #000 0, #000 15%, transparent 46%); }
+  svg.layer { position: absolute; left: 0; top: 0; overflow: visible; }
+  #cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+  .bubble { position: absolute; padding: 24px 46px 28px; background: #fff; border-radius: 64px; white-space: nowrap;
+    font-family: 'Huninn'; font-size: 80px; line-height: 1; color: #1B1F45; letter-spacing: .02em;
+    box-shadow: 0 0 0 10px #D4EDFF, 0 24px 34px -14px rgba(27,58,107,.5); transform-origin: 40px 125%; }
+  .bubble .c { display: inline-block; }
+  .bubble svg { position: absolute; left: 22px; bottom: -58px; overflow: visible; }
+  #grain { position: absolute; inset: 0; pointer-events: none; opacity: .5; mix-blend-mode: soft-light;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .5  0 0 0 0 .5  0 0 0 .35 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+</style>
+</head>
+<body>
+<div id="sky"></div>
+<div id="rays"></div>
+<svg class="layer" id="skyfx" width="1920" height="1080"></svg>
+<div id="cam">
+  <svg class="layer" id="world" width="1920" height="1080">
+    <defs>
+      <filter id="jshadow" x="-40%" y="-40%" width="180%" height="190%"><feDropShadow dx="0" dy="10" stdDeviation="9" flood-color="#13264D" flood-opacity="0.26"/></filter>
+      <filter id="soft" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#1F5A3A" flood-opacity="0.22"/></filter>
+    </defs>
+  </svg>
+  <div class="bubble" id="b1" style="left:1096px;top:342px"><span class="c">嗨</span><span class="c">！</span><span class="c">你</span><span class="c">好</span><span class="c">呀</span><span class="c">～</span>
+    <svg width="90" height="70"><path d="M8,-14 L74,-14 L-6,58 Z" fill="#D4EDFF"/><path d="M18,-14 L66,-14 L6,40 Z" fill="#fff"/></svg></div>
+  <div class="bubble" id="b2" style="left:1096px;top:342px"><span class="c">拜</span><span class="c">拜</span><span class="c">～</span>
+    <svg width="90" height="70"><path d="M8,-14 L74,-14 L-6,58 Z" fill="#D4EDFF"/><path d="M18,-14 L66,-14 L6,40 Z" fill="#fff"/></svg></div>
+</div>
+<div id="grain"></div>
+<script>
+window.build = function (MG) {
+  const tl = MG.tl, G = window.GRID, NS = 'http://www.w3.org/2000/svg';
+  const T = (k, b = 0) => { const i = G.phase + 4 * k + b, lo = Math.floor(i), fr = i - lo, bt = G.beats;
+    const at = j => j < bt.length ? bt[j] : bt[bt.length - 1] + (j - bt.length + 1) * G.beat; return at(lo) + (at(lo + 1) - at(lo)) * fr; };
+  const B = G.beat;
+  const sv = (tag, a, p) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); p.appendChild(e); return e; };
+  const world = document.getElementById('world'), skyfx = document.getElementById('skyfx');
+  const defs = world.querySelector('defs');
+  const grad = (id, stops, x2 = 0, y2 = 1) => { const g = sv('linearGradient', { id, x1: 0, y1: 0, x2, y2 }, defs); stops.forEach(([o, c]) => sv('stop', { offset: o, 'stop-color': c }, g)); };
+
+  // ================= sky: clouds + floating bubbles (time-driven) =================
+  const clouds = [[180, 250, 1.0, 9], [760, 150, .7, 6], [1380, 230, 1.15, 8], [1820, 120, .6, 5], [2300, 300, .9, 7]].map(([x, y, s, sp]) => {
+    const g = sv('g', {}, skyfx);
+    const parts = [[0, 0, 62], [66, -26, 74], [138, -4, 58], [56, 18, 56], [-52, 14, 44], [196, 16, 40]];
+    parts.forEach(([px, py, r]) => sv('circle', { cx: px, cy: py + 12, r, fill: '#D3ECFF' }, g));
+    parts.forEach(([px, py, r]) => sv('circle', { cx: px, cy: py, r, fill: '#fff' }, g));
+    sv('ellipse', { cx: 40, cy: -40, rx: 34, ry: 12, fill: '#fff', opacity: .9 }, g);
+    return { g, x, y, s, sp };
+  });
+  const floaters = Array.from({ length: 14 }, (_, i) => {
+    const r = 6 + (i * 37 % 17), x = (i * 397 + 120) % 1920, y0 = (i * 263) % 1100, sp = 18 + (i * 13 % 22);
+    const g = sv('g', { opacity: .55 }, skyfx);
+    sv('circle', { cx: 0, cy: 0, r, fill: '#fff', opacity: .35 }, g);
+    sv('circle', { cx: 0, cy: 0, r, fill: 'none', stroke: '#fff', 'stroke-width': 1.5, opacity: .8 }, g);
+    sv('circle', { cx: -r * .35, cy: -r * .35, r: r * .28, fill: '#fff' }, g);
+    return { g, r, x, y0, sp, ph: i * 1.7 };
+  });
+
+  // ================= ground: far hills, bushes, jelly hill =================
+  grad('gGround', [['0', '#A4EA92'], ['.45', '#62CB6E'], ['1', '#3DA35A']]);
+  grad('gFar', [['0', '#C4F0D9'], ['1', '#93D6B6']]);
+  grad('gBush', [['0', '#7FDB86'], ['1', '#3FAE5E']]);
+  const HILL = { cx: 960, cy: 1540, rx: 1600, ry: 720 };
+  const groundY = x => HILL.cy - HILL.ry * Math.sqrt(Math.max(0, 1 - ((x - HILL.cx) / HILL.rx) ** 2));
+  sv('path', { d: 'M-300,900 C40,690 300,700 560,800 C760,700 1010,690 1230,790 C1450,690 1700,700 2220,860 L2220,1300 L-300,1300 Z', fill: 'url(#gFar)' }, world);
+  [[250, 846, 92], [372, 866, 64], [1520, 846, 104], [1652, 868, 70], [1780, 852, 84], [80, 860, 70]].forEach(([x, y, r]) => {
+    const g = sv('g', { filter: 'url(#soft)' }, world);
+    sv('ellipse', { cx: x, cy: y, rx: r + 7, ry: r * .82 + 7, fill: '#D7F6CF' }, g);
+    sv('ellipse', { cx: x, cy: y, rx: r, ry: r * .82, fill: 'url(#gBush)' }, g);
+    sv('ellipse', { cx: x - r * .38, cy: y - r * .42, rx: r * .28, ry: r * .12, fill: '#fff', opacity: .55, transform: `rotate(-24 ${x - r * .38} ${y - r * .42})` }, g);
+  });
+  const hill = sv('g', { filter: 'url(#soft)' }, world);
+  sv('ellipse', { cx: HILL.cx, cy: HILL.cy, rx: HILL.rx + 12, ry: HILL.ry + 12, fill: '#E4FAD6' }, hill);
+  sv('ellipse', { cx: HILL.cx, cy: HILL.cy, rx: HILL.rx, ry: HILL.ry, fill: 'url(#gGround)' }, hill);
+  sv('ellipse', { cx: 640, cy: groundY(640) + 34, rx: 300, ry: 13, fill: '#fff', opacity: .22 }, world);
+  sv('ellipse', { cx: 1380, cy: groundY(1380) + 46, rx: 180, ry: 9, fill: '#fff', opacity: .18 }, world);
+  // grass tufts + tiny jelly flowers
+  [[300, 0], [520, 1], [820, 0], [1240, 1], [1460, 0], [1700, 1], [180, 1], [1080, 0]].forEach(([x, k]) => {
+    const y = groundY(x) + 26 + (k ? 20 : 0);
+    sv('path', { d: `M${x - 14},${y} Q${x - 10},${y - 22} ${x - 4},${y - 30} Q${x - 2},${y - 14} ${x},${y} Q${x + 4},${y - 26} ${x + 12},${y - 34} Q${x + 10},${y - 14} ${x + 16},${y} Z`, fill: '#3E9F57', opacity: .8 }, world);
+  });
+  [[430, '#FF8CB1'], [1180, '#FFD24D'], [1590, '#FF8CB1'], [720, '#FFFFFF']].forEach(([x, c]) => {
+    const y = groundY(x) + 44;
+    for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2; sv('circle', { cx: x + Math.cos(a) * 9, cy: y + Math.sin(a) * 9, r: 7.5, fill: c }, world); }
+    sv('circle', { cx: x, cy: y, r: 6, fill: '#FFB83D' }, world);
+  });
+
+  // ================= the slime =================
+  const sg = sv('g', {}, world);
+  const r = Jelly.make(sg); Jelly.pose(r, 'excited');
+  const SC = 1.35, BASE = 18;          // scale, how far in front of the hill edge the slime stands
+  const S = { x: 640, lift: 660, sx: .84, sy: 1.24, rot: 0, hop: 0, amt: 0, look: 0, dir: 0, shake: 0, seed: .7 };
+  const cur = { ...S };
+  const to = (props, at, dur, ease = 'power2.out') => {
+    const from = {}; for (const k in props) from[k] = cur[k];
+    tl.fromTo(S, from, { ...props, duration: dur, ease, immediateRender: false }, at); Object.assign(cur, props);
+  };
+  let fc = 'excited';
+  const F = (name, at, o) => { Jelly.face(tl, r, fc, name, at, o); fc = name; };
+  const blink = at => Jelly.blink(tl, r, at);
+  // water droplets that splash out on big landings (time-driven parabolas)
+  const drops = [];
+  const splash = (at, n = 7, power = 1) => {
+    for (let i = 0; i < n; i++) {
+      const g = sv('g', { visibility: 'hidden' }, world);
+      const rr = 7 + (i * 5) % 7;
+      sv('circle', { cx: 0, cy: 0, r: rr, fill: '#7FC4FA', stroke: '#E3F4FF', 'stroke-width': 3 }, g);
+      sv('circle', { cx: -rr * .35, cy: -rr * .35, r: rr * .3, fill: '#fff' }, g);
+      const side = i % 2 ? 1 : -1, sp = .55 + (i * 0.37 % .5);
+      const d = { g, p: 0, vx: side * (110 + i * 22) * power, vy: -(150 + (i * 41 % 90)) * power, x0: 0 };
+      tl.fromTo(d, { p: 0 }, { p: 1, duration: .5 + sp * .25, ease: 'none', immediateRender: false }, at);
+      drops.push(d);
+    }
+  };
+  const cam = { x: 960, y: 540, s: 1 }, ccur = { ...cam };
+  const camTo = (props, at, dur, ease = 'power2.inOut') => {
+    const from = {}; for (const k in props) from[k] = ccur[k];
+    tl.fromTo(cam, from, { ...props, duration: dur, ease, immediateRender: false }, at); Object.assign(ccur, props);
+  };
+  // speech: bubble pops, voice plays, characters pop on the syllables, mouth follows the voice
+  const talks = [];
+  const say = (bubbleId, key, at, charTimes) => {
+    const b = document.getElementById(bubbleId), d = window.TALK[key];
+    tl.fromTo(b, { scale: .2, opacity: 0, rotation: -8 }, { scale: 1, opacity: 1, rotation: 0, duration: .42, ease: 'back.out(2.2)', immediateRender: true }, at - .3);
+    MG.sfx('pop', at - .3);
+    const cs = b.querySelectorAll('.c');
+    cs.forEach((c, i) => tl.fromTo(c, { opacity: 0, scale: .2, y: 18 }, { opacity: 1, scale: 1, y: 0, duration: .22, ease: 'back.out(3)', immediateRender: true }, at + charTimes[i]));
+    talks.push({ at, d });
+    MG.sfx(key, at, { dur: d.dur });
+    tl.fromTo(r.fs.talk, { on: 0 }, { on: 1, duration: .06, immediateRender: false }, at - .06);
+    tl.fromTo(r.fs.talk, { on: 1 }, { on: 0, duration: .1, immediateRender: false }, at + d.dur + .02);
+    return b;
+  };
+  const unsay = (b, at) => tl.fromTo(b, { scale: 1, opacity: 1 }, { scale: .2, opacity: 0, duration: .24, ease: 'back.in(2)', immediateRender: false }, at);
+
+  // ---------- 1. drop in from the sky, splat, two bounces ----------
+  const L1 = T(0, 2), tFall = L1 - .72;
+  MG.sfx('fall', tFall);
+  to({ lift: 0 }, tFall, .72, 'power2.in');
+  F('strain', L1 - .02, { inDur: .12 });
+  MG.sfx('land', L1); splash(L1, 8, 1);
+  to({ sx: 1.45, sy: .56 }, L1, .07, 'power2.out');
+  to({ sx: .9, sy: 1.15 }, L1 + .09, .16, 'power2.out');
+  to({ lift: 150 }, L1 + .1, .26, 'power2.out');
+  to({ lift: 0 }, L1 + .36, .24, 'power2.in');
+  F('happy', L1 + .3);
+  MG.sfx('boing', L1 + .6);
+  to({ sx: 1.24, sy: .79 }, L1 + .6, .06);
+  to({ sx: .95, sy: 1.06 }, L1 + .66, .12);
+  to({ lift: 52 }, L1 + .66, .16, 'power2.out');
+  to({ lift: 0 }, L1 + .82, .15, 'power2.in');
+  MG.sfx('hop', L1 + .97);
+  to({ sx: 1.1, sy: .9 }, L1 + .97, .05);
+  to({ sx: 1, sy: 1 }, L1 + 1.02, .6, 'elastic.out(1, .45)');
+  F('neutral', T(1, 0) - .1);
+
+  // ---------- 2. idle: look around, curious ----------
+  blink(T(1, 0) + .35);
+  F('lookL', T(1, 1)); to({ look: -.6 }, T(1, 1), .35, 'power2.inOut');
+  F('lookR', T(1, 3)); to({ look: .6 }, T(1, 3), .4, 'power2.inOut');
+  blink(T(2, 0) + .2);
+  F('curious', T(2, 1)); to({ rot: 8, look: .25 }, T(2, 1), .4, 'back.out(2)'); MG.sfx('pop2', T(2, 1) + .05);
+  blink(T(2, 3));
+
+  // ---------- 3. hop to the middle (landings on the beats) ----------
+  const H0 = T(3, 0) - .78 * B, H1 = H0 + 4 * B;
+  F('happy', H0 - .15); to({ rot: 0, look: .35, dir: 1 }, H0 - .2, .25);
+  to({ amt: 1 }, H0, .08, 'none');
+  tl.fromTo(S, { hop: 0 }, { hop: 4, duration: H1 - H0, ease: 'none', immediateRender: false }, H0); cur.hop = 4;
+  to({ x: 1000 }, H0, H1 - H0, 'none');
+  for (let k = 0; k < 4; k++) MG.sfx('hop', H0 + (k + .78) * B);
+  to({ amt: 0 }, H1 - .02, .06, 'none');
+  to({ look: 0, dir: 0 }, H1, .3);
+
+  // ---------- 4. talk: "嗨！你好呀～" ----------
+  F('talk', T(4, 0));
+  camTo({ x: 1150, y: 590, s: 1.16 }, T(4, 0) - .2, 1.0);
+  const ts1 = T(4, 1) + .26;
+  const b1 = say('b1', 'talk1', ts1, [.02, .2, .38, .61, .91, 1.05]);
+  blink(ts1 + .7);
+  F('happy', ts1 + 1.62);
+  to({ lift: 46, sx: .94, sy: 1.07 }, ts1 + 1.62, .17, 'power2.out');
+  to({ lift: 0 }, ts1 + 1.79, .16, 'power2.in');
+  to({ sx: 1.12, sy: .9 }, ts1 + 1.95, .05); to({ sx: 1, sy: 1 }, ts1 + 2.0, .5, 'elastic.out(1, .45)');
+  MG.sfx('hop', ts1 + 1.95);
+  unsay(b1, T(5, 3));
+  camTo({ x: 960, y: 540, s: 1 }, T(5, 3), 1.0);
+
+  // ---------- 5. expressions: shy -> startled -> proud -> love ----------
+  F('shy', T(6, 0)); MG.sfx('giggle', T(6, 0) + .05);
+  to({ rot: -7, sx: 1.06, sy: .94 }, T(6, 0), .35, 'back.out(2)');
+  to({ rot: -2 }, T(6, 0) + .4, 1.3, 'sine.inOut');
+  blink(T(6, 2) + .1);
+  const K = T(7, 0);
+  F('scared', K, { inDur: .12 }); MG.sfx('eep', K);
+  to({ rot: 0, sx: .84, sy: 1.22 }, K, .1, 'power3.out');
+  to({ lift: 78 }, K, .17, 'power2.out'); to({ lift: 0 }, K + .17, .18, 'power2.in');
+  to({ sx: 1.16, sy: .85 }, K + .35, .06); to({ sx: 1, sy: 1 }, K + .41, .5, 'elastic.out(1, .4)');
+  to({ shake: 1 }, K + .4, .05, 'none'); to({ shake: 0 }, K + .45, .8, 'power1.in');
+  F('proud', T(8, 0)); MG.sfx('sparkle', T(8, 0));
+  to({ sx: .95, sy: 1.08 }, T(8, 0), .35, 'back.out(2.5)');
+  F('love', T(9, 0)); MG.sfx('kiss', T(9, 0) + .05);
+  to({ sx: 1.05, sy: .96 }, T(9, 0), .3, 'back.out(2)');
+  to({ rot: 5 }, T(9, 0) + .2, .5, 'sine.inOut'); to({ rot: -5 }, T(9, 0) + .7, .5, 'sine.inOut'); to({ rot: 0 }, T(9, 0) + 1.2, .4, 'sine.inOut');
+
+  // ---------- 6. big spin jump ----------
+  const J = T(10, 0), L2 = T(10, 2);
+  F('determined', J - .5);
+  to({ sx: 1.24, sy: .74 }, J - .32, .3, 'power2.inOut');                   // anticipation crouch
+  F('excited', J);
+  MG.sfx('whoosh', J);
+  to({ sx: .84, sy: 1.22 }, J, .1, 'power3.out');
+  to({ lift: 330 }, J, .5, 'power2.out');
+  to({ sx: 1, sy: 1 }, J + .14, .3);
+  tl.fromTo(S, { rot: 0 }, { rot: 360, duration: .92, ease: 'power1.inOut', immediateRender: false }, J + .04); cur.rot = 360;
+  to({ lift: 0 }, J + .5, L2 - J - .5, 'power2.in');
+  to({ sx: .88, sy: 1.15 }, L2 - .22, .2);
+  MG.sfx('land', L2); splash(L2, 9, 1.15);
+  to({ sx: 1.42, sy: .6 }, L2, .07); to({ sx: 1, sy: 1 }, L2 + .07, .7, 'elastic.out(1, .35)');
+  F('happy', L2 + .02);
+
+  // ---------- 7. melt into a puddle, then spring back ----------
+  const M = T(11, 0);
+  F('lazy', M, { dur: .4 }); MG.sfx('squish', M + .05);
+  to({ sx: 1.4, sy: .55 }, M, .85, 'power2.inOut');
+  const U = T(12, 0);
+  F('excited', U, { inDur: .14 }); MG.sfx('boing', U);
+  to({ sx: .8, sy: 1.28 }, U, .12, 'power3.out');
+  to({ lift: 110 }, U + .02, .22, 'power2.out'); to({ lift: 0 }, U + .24, .2, 'power2.in');
+  to({ sx: 1.18, sy: .85 }, U + .44, .06); to({ sx: 1, sy: 1 }, U + .5, .6, 'elastic.out(1, .4)');
+  MG.sfx('hop', U + .44);
+  F('wink', T(12, 2));
+
+  // ---------- 8. bye bye ----------
+  const ts2 = T(13, 0) + .1;
+  const b2 = say('b2', 'talk2', ts2, [.02, .28, .4]);
+  F('happy', ts2 + .62);
+  to({ lift: 40, sx: .95, sy: 1.06 }, T(13, 2), .16, 'power2.out'); to({ lift: 0 }, T(13, 2) + .16, .15, 'power2.in');
+  to({ sx: 1.1, sy: .92 }, T(13, 2) + .31, .05); to({ sx: 1, sy: 1 }, T(13, 2) + .36, .5, 'elastic.out(1, .45)');
+  MG.sfx('hop', T(13, 2) + .31);
+  F('wink', T(13, 3));
+  unsay(b2, T(14, 0) + .1);
+  tl.to({}, { duration: .01 }, T(14, 1) + .4);
+
+  // ================= per-frame drawing =================
+  const camEl = document.getElementById('cam'), rays = document.getElementById('rays');
+  MG.onFrame(t => {
+    // voice -> mouth
+    let v = 0;
+    for (const k of talks) { const i = Math.floor((t - k.at) * 60); if (i >= 0 && i < k.d.env.length) v = k.d.env[i]; }
+    r.fs.talk.v = v;
+    const shake = S.shake ? Math.sin(t * 64) * 6 * S.shake : 0;
+    sg.setAttribute('transform', `translate(${S.x + shake} ${groundY(S.x) + BASE}) scale(${SC})`);
+    Jelly.apply(r, { ...S, sy: S.sy * (1 + .035 * v), sx: S.sx * (1 - .018 * v) }, t);
+    // splash droplets
+    drops.forEach(d => {
+      if (d.p <= 0 || d.p >= 1) { d.g.setAttribute('visibility', 'hidden'); return; }
+      const tt = d.p * .7, x = S.x + d.vx * tt * 1.6, y = groundY(S.x) + BASE - 30 + d.vy * tt * 2 + 900 * tt * tt;
+      d.g.setAttribute('visibility', 'visible');
+      d.g.setAttribute('transform', `translate(${x} ${y}) scale(${1 - d.p * .7})`);
+    });
+    // camera (+ a tiny hand-held drift)
+    const dr = MG.cam.drift(t, .45);
+    camEl.style.transform = `translate(${960 + dr.x}px, ${540 + dr.y}px) scale(${cam.s}) translate(${-cam.x}px, ${-cam.y}px)`;
+    // sky
+    rays.style.transform = `rotate(${t * 2.2}deg)`;
+    clouds.forEach(c => c.g.setAttribute('transform', `translate(${((c.x - c.sp * t) % 2600 + 2600) % 2600 - 300} ${c.y}) scale(${c.s})`));
+    floaters.forEach(f => { const y = ((f.y0 - f.sp * t) % 1150 + 1150) % 1150 - 40; f.g.setAttribute('transform', `translate(${f.x + 10 * Math.sin(t * .9 + f.ph)} ${y})`); });
+  });
+};
+</script>
+</body>
+</html>
