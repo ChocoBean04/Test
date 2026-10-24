@@ -1,6 +1,11 @@
 # brainstorming 视觉辅助、subagent 工作区的暂存文件
 .superpowers/
 
+# ai-level-check 跑出来的证据包和报告：里面有对话原文，绝不进这个公开仓库
+evidence/
+*.evidence.json
+reports/
+
 # 套件与缓存
 node_modules/
 __pycache__/

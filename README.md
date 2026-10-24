@@ -27,6 +27,20 @@
 来源版本：`obra/superpowers@5bf4e78`（MIT 许可证，见 `licenses/superpowers-LICENSE`）。
 复制时把技能之间的引用从 `superpowers:技能名` 改成了 `技能名`，因为作为项目技能加载时没有插件前缀。
 
+### ai-level-check「AI 几级了」（来自 [Raymondhou0917/ai-level-check](https://github.com/Raymondhou0917/ai-level-check)）
+
+| 技能 | 用途 |
+|---|---|
+| `ai-level-check` | 读 AI 对话记录，产出一份有证据、可追溯的「AI 使用能力报告」：LV0–LV5 使用等级、四项系统验证、16 型使用人物志，输出单文件 HTML。对它说「帮我做 AI 能力检核」「我是哪一型的 AI 使用者」就会触发 |
+
+来源版本：`Raymondhou0917/ai-level-check@d262ca6`（v0.4.6，MIT 许可证，见 `licenses/ai-level-check-LICENSE`）。
+只复制了技能真正要用的部分（`SKILL.md`、`references/`、`scripts/`、`templates/`、`prompts/`），示范网站和图片没有搬进来；人物志的四张图改成链接到原仓库。
+
+两点要知道：
+
+- **云端 session 扫不到你电脑上的记录。** 这个技能原本是装在自己电脑上、扫硬盘里 Claude Code / Codex 留下的对话记录。云端 session 的硬盘是全新的，只有当前这一场对话。所以在云端要用「贴上模式」：把最近的对话贴进来，或直接让它分析当前这一场。要扫完整记录，得在自己电脑上照原仓库的 `install/claude-code.md` 装。
+- **报告里可能有你的原话和工作细节。** 跑脚本产生的 `evidence/` 和 `reports/` 已加进 `.gitignore`，不会被提交到这个公开仓库。
+
 ### 账号技能（自动同步，不在这个仓库里）
 
 你在 claude.ai 设置里启用的技能（例如 `holiday-activity-book`、`question-reveal`、`y1-answer-check`、`youyouspellingbeehomework`、`docx`、`pptx`）会自动出现在每个云端 session，不需要复制到这里。
